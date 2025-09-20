@@ -4,12 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="982863ad-1215-41d7-9a98-df965e3b7725" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="982863ad-1215-41d7-9a98-df965e3b7725" name="Changes" comment="Ajout d'un notebook pour la collecte et l'harmonisation des données, mise à jour des fichiers de configuration du projet, et ajout des dépendances nécessaires dans `requirements.txt`.">
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/project.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebook/Tache_1_CHOKKI_MIKE_2009.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -62,7 +60,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
-    "settings.editor.selected.configurable": "ml.llm.LLMTrustedDomainsConfigurableProvider"
+    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.Color Scheme Font"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -85,10 +83,20 @@
       <option name="presentableId" value="Default" />
       <updated>1758310831834</updated>
     </task>
+    <task id="LOCAL-00001" summary="Ajout d'un notebook pour la collecte et l'harmonisation des données, mise à jour des fichiers de configuration du projet, et ajout des dépendances nécessaires dans `requirements.txt`.">
+      <option name="closed" value="true" />
+      <created>1758361365649</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1758361365649</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Ajout et mise à jour des fichiers de configuration du projet Python : suppression et remplacement d'un notebook, ajout de dépendances dans `requirements.txt`, et configuration de dictionnaires personnalisés." />
-    <option name="LAST_COMMIT_MESSAGE" value="Ajout et mise à jour des fichiers de configuration du projet Python : suppression et remplacement d'un notebook, ajout de dépendances dans `requirements.txt`, et configuration de dictionnaires personnalisés." />
+    <MESSAGE value="Ajout d'un notebook pour la collecte et l'harmonisation des données, mise à jour des fichiers de configuration du projet, et ajout des dépendances nécessaires dans `requirements.txt`." />
+    <option name="LAST_COMMIT_MESSAGE" value="Ajout d'un notebook pour la collecte et l'harmonisation des données, mise à jour des fichiers de configuration du projet, et ajout des dépendances nécessaires dans `requirements.txt`." />
   </component>
 </project>
