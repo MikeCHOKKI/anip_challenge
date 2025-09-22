@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="982863ad-1215-41d7-9a98-df965e3b7725" name="Changes" comment="Ajout de la documentation détaillée pour la classe `INStadScraper` dans le notebook, incluant objectifs, méthodes, prérequis, bonnes pratiques, limites connues, et exemples d'utilisation.">
+    <list default="true" id="982863ad-1215-41d7-9a98-df965e3b7725" name="Changes" comment="Mise à jour des métadonnées et des configurations du notebook : corrections apportées à la structure des cellules, amélioration des journaux d'exécution, normalisation des API URL et ajout de nouvelles configurations.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tache_1_CHOKKI_MIKE_2009.ipynb" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +108,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758374147745</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Mise à jour des métadonnées et des configurations du notebook : corrections apportées à la structure des cellules, amélioration des journaux d'exécution, normalisation des API URL et ajout de nouvelles configurations.">
+      <option name="closed" value="true" />
+      <created>1758409967728</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1758409967728</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -116,6 +124,7 @@
     <MESSAGE value="Ajout d'un notebook pour la collecte et l'harmonisation des données, mise à jour des fichiers de configuration du projet, et ajout des dépendances nécessaires dans `requirements.txt`." />
     <MESSAGE value="Mise à jour du notebook pour inclure des améliorations sur la collecte API, la gestion des dossiers, et les nouvelles configurations des URL et indicateurs. Ajout de nouvelles fonctionnalités pour le World Bank API et l'API INStad, amélioration des journaux et documentation. Mise à jour des métadonnées liées à l'exécution." />
     <MESSAGE value="Ajout de la documentation détaillée pour la classe `INStadScraper` dans le notebook, incluant objectifs, méthodes, prérequis, bonnes pratiques, limites connues, et exemples d'utilisation." />
-    <option name="LAST_COMMIT_MESSAGE" value="Ajout de la documentation détaillée pour la classe `INStadScraper` dans le notebook, incluant objectifs, méthodes, prérequis, bonnes pratiques, limites connues, et exemples d'utilisation." />
+    <MESSAGE value="Mise à jour des métadonnées et des configurations du notebook : corrections apportées à la structure des cellules, amélioration des journaux d'exécution, normalisation des API URL et ajout de nouvelles configurations." />
+    <option name="LAST_COMMIT_MESSAGE" value="Mise à jour des métadonnées et des configurations du notebook : corrections apportées à la structure des cellules, amélioration des journaux d'exécution, normalisation des API URL et ajout de nouvelles configurations." />
   </component>
 </project>
