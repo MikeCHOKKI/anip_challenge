@@ -1,0 +1,7 @@
+source,records_count,columns_count,memory_usage_mb,collection_date,has_nulls,null_percentage,numeric_columns,date_columns,date_range,duplicate_rows
+world_bank_collector,520,7,0.16,2025-09-30,True,2.09,2,0,1960-2024,0
+web_scraping_collector,83,26,0.06,2025-09-30,True,72.71,11,0,N/A,0
+geographic_collector_cities,3480,8,0.88,2025-09-30,True,13.38,4,0,N/A,0
+geographic_collector_admin_boundaries_pays,1,8,0.0,2025-09-30,False,0.0,3,0,N/A,0
+geographic_collector,3481,10,1.1,2025-09-30,True,30.7,4,0,N/A,0
+external_collector,3,585,0.08,2025-09-30,True,82.11,282,0,N/A,0

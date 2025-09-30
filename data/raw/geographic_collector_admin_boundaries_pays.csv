@@ -1,0 +1,2 @@
+name,osm_id,latitude,longitude,data_type,source,admin_level,wikidata,collection_time,collection_date,collector_class
+Bénin,192784,9.2245362,2.3109062,admin_boundaries_pays,OpenStreetMap,2,Q962,19:33:15.988793,2025-09-30,GeographicCollector
