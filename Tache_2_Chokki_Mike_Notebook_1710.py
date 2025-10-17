@@ -19,28 +19,44 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import warnings
 
-warnings.filterwarnings("ignore")
-
 
 # %%
 @dataclass
 class AnalysisConfig:
-    """Configuration pour l'analyse exploratoire"""
+    """
+    Configuration class for analysis tasks.
+
+    Provides configurations such as country details, anomaly detection
+    thresholds, indicator configurations, and directory structure
+    required for data analysis tasks.
+
+    Attributes:
+        COUNTRY_CODE: ISO 3166-1 alpha-2 country code.
+        COUNTRY_NAME: Full country name.
+        ZSCORE_THRESHOLD: Threshold value for anomaly detection using Z-score.
+        IQR_MULTIPLIER: Multiplier value for anomaly detection using the
+            interquartile range (IQR) method.
+        CORRELATION_THRESHOLD: Threshold to identify significant
+            correlations between datasets.
+        POPULATION_AGE_YOUNG: Age defining the younger population boundary.
+        POPULATION_AGE_OLD: Age defining the older population boundary.
+        GDP_BASE_YEAR: Base year for GDP calculations.
+        DIRECTORY_STRUCTURE: A dictionary specifying paths for input, output,
+            processed, enriched, analysis, anomalies, visualizations,
+            and logs directories.
+    """
 
     COUNTRY_CODE: str = "BJ"
     COUNTRY_NAME: str = "Bénin"
 
-    # Seuils pour la détection d'anomalies
     ZSCORE_THRESHOLD: float = 3.0
     IQR_MULTIPLIER: float = 1.5
     CORRELATION_THRESHOLD: float = 0.7
 
-    # Configuration des indicateurs
     POPULATION_AGE_YOUNG: int = 15
     POPULATION_AGE_OLD: int = 65
     GDP_BASE_YEAR: int = 2015
 
-    # Répertoires
     DIRECTORY_STRUCTURE: Dict[str, str] = field(
         default_factory=lambda: {
             "input": "data_task_1/final_data",
@@ -57,7 +73,18 @@ class AnalysisConfig:
 
 # %%
 def setup_analysis_environment(log_dir: Optional[Path] = None) -> None:
-    """Configure l'environnement d'analyse"""
+    """
+    Sets up the analysis environment with logging, display configurations for
+    pandas, and visualization settings for seaborn and matplotlib. Ensures a
+    consistent and user-friendly environment for data analysis and visualization.
+
+    Raises:
+        OSError: If the specified log directory cannot be created or accessed.
+
+    Parameters:
+        log_dir (Optional[Path]): Path to the directory for saving log files.
+                                  If None, logging to a file is skipped.
+    """
     warnings.filterwarnings("ignore")
 
     log_format = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
@@ -101,7 +128,23 @@ def setup_analysis_environment(log_dir: Optional[Path] = None) -> None:
 
 # %%
 class DirectoryManager:
-    """Gestionnaire de répertoires pour l'analyse"""
+    """
+    Handles directory structure management and initialization.
+
+    DirectoryManager is a utility class designed to manage and organize
+    a set of directories based on a predefined structure. It allows for
+    initializing directory structures, retrieving directory paths by
+    name, and logging activity. It can be configured using an AnalysisConfig
+    object or defaults to a predefined configuration.
+
+    Attributes:
+        base_dir (Path): The base directory where the directory structure
+            will be created. Defaults to the current working directory if
+            not specified.
+        config (AnalysisConfig): The configuration object containing the
+            directory structure specifications.
+        logger (Logger): Logger instance for logging activities.
+    """
 
     def __init__(
         self, base_dir: Optional[Path] = None, config: Optional[AnalysisConfig] = None
@@ -112,7 +155,6 @@ class DirectoryManager:
         self._directories: Dict[str, Path] = {}
 
     def initialize_structure(self) -> Dict[str, Path]:
-        """Crée la structure de répertoires"""
         for name, path in self.config.DIRECTORY_STRUCTURE.items():
             full_path = self.base_dir / path
             full_path.mkdir(parents=True, exist_ok=True)
@@ -122,15 +164,35 @@ class DirectoryManager:
         return self._directories
 
     def get_path(self, name: str) -> Optional[Path]:
-        """Récupère un chemin de répertoire"""
         return self._directories.get(name)
 
 
 # %%
 @dataclass
 class AnomalyReport:
-    """Rapport de détection d'anomalies"""
+    """
+    Represents a report for detected anomalies in a dataset.
 
+    This class encapsulates details about anomalies identified in a specific dataset
+    and variable. It provides a structure to store the summary of anomalies including
+    anomaly count, percentage, type, and additional details. The timestamp is
+    automatically captured when an object of this class is instantiated.
+
+    Attributes:
+        dataset_name: Name of the dataset where anomalies are detected.
+        variable: The specific variable in the dataset associated with the anomalies.
+        anomaly_type: Type of the anomaly identified (e.g., outlier, missing data).
+        anomaly_count: Total number of anomalies detected.
+        anomaly_percentage: Percentage of anomalies relative to the total data points.
+        details: Additional information about the anomalies.
+        timestamp: The time and date when the anomaly report was created.
+
+    Methods:
+        to_dict:
+            Converts the anomaly report instance into a dictionary representation.
+            The dictionary includes dataset name, variable, anomaly type, count,
+            percentage, details, and timestamp for easier serialization or logging.
+    """
     dataset_name: str
     variable: str
     anomaly_type: str
@@ -153,14 +215,21 @@ class AnomalyReport:
 
 # %%
 class DataLoader:
-    """Chargeur de données consolidées"""
+    """
+    Class responsible for loading datasets from a specified directory of CSV files.
+
+    This class provides functionality for reading multiple CSV files in a given directory and
+    parsing them into pandas DataFrame objects. The primary purpose of the class is to facilitate
+    organized dataset loading along with maintaining logging for errors, warnings, and processing
+    information. It supports UTF-8 encoded files and processes only files with a .csv extension,
+    skipping any empty files.
+    """
 
     def __init__(self, input_dir: Path):
         self.input_dir = input_dir
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def load_all_datasets(self) -> Dict[str, pd.DataFrame]:
-        """Charge tous les datasets disponibles"""
         datasets = {}
 
         if not self.input_dir.exists():
@@ -199,17 +268,28 @@ class DataLoader:
 
 # %%
 class DescriptiveAnalyzer:
-    """Analyseur descriptif des données"""
+    """Performs comprehensive analysis of datasets, including descriptive analytics,
+    temporal and spatial variable identification, and summary reports.
 
+    This class is designed to provide an in-depth look into the structure and
+    content of datasets. It helps pinpoint missing data, identify variable types,
+    and generate summarized views of analytic results. Primarily used for
+    exploratory data analysis, the class includes methods for handling datasets
+    with temporal and spatial attributes. The results are returned in structured
+    formats for downstream usage.
+
+    Attributes:
+        config (Optional[AnalysisConfig]): Configuration object for specifying
+            analysis settings.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def analyze_dataset(self, df: pd.DataFrame, dataset_name: str) -> Dict[str, Any]:
-        """Analyse descriptive complète d'un dataset"""
         self.logger.info(f"📊 Analyse descriptive: {dataset_name}")
 
-        analysis = {
+        analysis: Dict[str, Any] = {
             "dataset_name": dataset_name,
             "shape": df.shape,
             "memory_usage_mb": round(df.memory_usage(deep=True).sum() / (1024**2), 2),
@@ -217,7 +297,6 @@ class DescriptiveAnalyzer:
             "dtypes": df.dtypes.value_counts().to_dict(),
         }
 
-        # Statistiques de complétude
         analysis["completeness"] = {
             "total_cells": df.size,
             "non_null_cells": df.notna().sum().sum(),
@@ -225,7 +304,6 @@ class DescriptiveAnalyzer:
             "completeness_rate": round(df.notna().sum().sum() / df.size * 100, 2),
         }
 
-        # Statistiques par colonne
         column_stats = []
         for col in df.columns:
             stat = {
@@ -255,7 +333,6 @@ class DescriptiveAnalyzer:
         return analysis
 
     def identify_temporal_variables(self, df: pd.DataFrame) -> List[str]:
-        """Identifie les variables temporelles"""
         temporal_vars = []
 
         for col in df.columns:
@@ -269,7 +346,6 @@ class DescriptiveAnalyzer:
         return temporal_vars
 
     def identify_spatial_variables(self, df: pd.DataFrame) -> List[str]:
-        """Identifie les variables spatiales"""
         spatial_vars = []
 
         spatial_keywords = [
@@ -296,7 +372,6 @@ class DescriptiveAnalyzer:
     def generate_summary_report(
         self, analyses: Dict[str, Dict[str, Any]]
     ) -> pd.DataFrame:
-        """Génère un rapport de synthèse"""
         summary_data = []
 
         for dataset_name, analysis in analyses.items():
@@ -316,8 +391,20 @@ class DescriptiveAnalyzer:
 
 # %%
 class TrendAnalyzer:
-    """Analyseur de tendances temporelles"""
+    """
+    TrendAnalyzer
 
+    The TrendAnalyzer class provides tools to analyze temporal trends and calculate
+    growth rates from data. It is designed to operate on pandas DataFrame objects
+    and assists in processing time-series data for meaningful insights. It features
+    capabilities such as temporal aggregation, growth rate computations, and trend
+    analysis across multiple value columns.
+
+    Attributes:
+        config (Optional[AnalysisConfig]): Configuration object for analysis.
+        logger (logging.Logger): Logger instance for the class, utilized for
+        logging informational messages and warnings.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -325,7 +412,6 @@ class TrendAnalyzer:
     def analyze_temporal_trends(
         self, df: pd.DataFrame, time_col: str, value_cols: List[str]
     ) -> Dict[str, pd.DataFrame]:
-        """Analyse les tendances temporelles"""
         self.logger.info(f"📈 Analyse des tendances temporelles")
 
         trends = {}
@@ -337,14 +423,12 @@ class TrendAnalyzer:
                 continue
 
             try:
-                # Agrégation par période temporelle
                 trend_df = (
                     df.groupby(time_col)[value_col]
                     .agg(["count", "mean", "median", "std", "min", "max"])
                     .reset_index()
                 )
 
-                # Calcul des variations
                 trend_df["pct_change"] = trend_df["mean"].pct_change() * 100
                 trend_df["cumulative_change"] = (
                     (trend_df["mean"] / trend_df["mean"].iloc[0]) - 1
@@ -360,14 +444,11 @@ class TrendAnalyzer:
     def calculate_growth_rates(
         self, df: pd.DataFrame, time_col: str, value_col: str
     ) -> pd.DataFrame:
-        """Calcule les taux de croissance"""
         result = df.copy()
         result = result.sort_values(time_col)
 
-        # Taux de croissance annuel
         result["growth_rate"] = result[value_col].pct_change() * 100
 
-        # Taux de croissance annuel moyen (CAGR)
         if len(result) > 1:
             first_value = result[value_col].iloc[0]
             last_value = result[value_col].iloc[-1]
@@ -382,8 +463,14 @@ class TrendAnalyzer:
 
 # %%
 class SpatialAnalyzer:
-    """Analyseur de dynamiques spatiales"""
+    """
+    Handles spatial data analysis tasks related to distributions and regional disparities.
 
+    The SpatialAnalyzer class provides methods for analyzing spatial distributions within a
+    DataFrame and calculating various metrics to identify regional disparities. It enables
+    users to compute descriptive statistics and evaluate inequality measures such as the Gini
+    coefficient for spatially grouped datasets.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -391,7 +478,6 @@ class SpatialAnalyzer:
     def analyze_spatial_distribution(
         self, df: pd.DataFrame, spatial_col: str, value_cols: List[str]
     ) -> pd.DataFrame:
-        """Analyse la distribution spatiale"""
         self.logger.info(f"🗺️ Analyse spatiale sur {spatial_col}")
 
         spatial_stats = []
@@ -427,7 +513,6 @@ class SpatialAnalyzer:
     def calculate_regional_disparities(
         self, df: pd.DataFrame, spatial_col: str, value_col: str
     ) -> Dict[str, float]:
-        """Calcule les disparités régionales"""
         regional_means = df.groupby(spatial_col)[value_col].mean()
 
         disparities = {
@@ -447,7 +532,6 @@ class SpatialAnalyzer:
         return disparities
 
     def _calculate_gini(self, values: np.ndarray) -> float:
-        """Calcule le coefficient de Gini"""
         values = np.array(values)
         values = values[~np.isnan(values)]
 
@@ -463,8 +547,24 @@ class SpatialAnalyzer:
 
 # %%
 class CorrelationAnalyzer:
-    """Analyseur de corrélations"""
+    """
+    Analyzes correlations within datasets and across multiple datasets.
 
+    The CorrelationAnalyzer class provides utilities for calculating correlation matrices,
+    identifying strong correlations, and analyzing relationships between datasets. It
+    supports various correlation methods and can work with user-defined configurations.
+
+    Attributes:
+        config (AnalysisConfig): Configuration used for correlation analysis.
+        logger (logging.Logger): Logger for tracking analysis process logs.
+
+    Methods:
+        calculate_correlations: Computes the correlation matrix for the numeric columns in a dataset.
+        find_strong_correlations: Identifies strong correlations meeting or exceeding a threshold
+                                   within a correlation matrix.
+        cross_dataset_correlation: Analyzes correlations between two datasets by merging them
+                                    on specified columns and examining their numeric columns.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -472,7 +572,6 @@ class CorrelationAnalyzer:
     def calculate_correlations(
         self, df: pd.DataFrame, method: str = "pearson"
     ) -> pd.DataFrame:
-        """Calcule la matrice de corrélation"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
 
         if len(numeric_cols) < 2:
@@ -493,7 +592,6 @@ class CorrelationAnalyzer:
     def find_strong_correlations(
         self, corr_matrix: pd.DataFrame, threshold: Optional[float] = None
     ) -> pd.DataFrame:
-        """Identifie les corrélations fortes"""
         threshold = threshold or self.config.CORRELATION_THRESHOLD
 
         strong_corr = []
@@ -528,7 +626,6 @@ class CorrelationAnalyzer:
     def cross_dataset_correlation(
         self, df1: pd.DataFrame, df2: pd.DataFrame, merge_cols: List[str]
     ) -> pd.DataFrame:
-        """Corrélations croisées entre datasets"""
         try:
             merged = pd.merge(
                 df1, df2, on=merge_cols, how="inner", suffixes=("_1", "_2")
@@ -547,8 +644,20 @@ class CorrelationAnalyzer:
 
 # %%
 class AnomalyDetector:
-    """Détecteur d'anomalies"""
+    """
+    Class for detecting anomalies in data using statistical methods.
 
+    This class provides methods to identify anomalies in datasets by applying Z-score and
+    IQR-based anomaly detection techniques. It also detects inconsistencies in data, such
+    as negative values in numerical columns or invalid year values outside a specified range.
+    The class is designed to handle datasets in the form of pandas DataFrames and can generate
+    reports summarizing detected anomalies.
+
+    Attributes:
+        config (AnalysisConfig): Configuration settings for the anomaly detection process.
+        anomaly_reports (List[AnomalyReport]): List of anomaly reports generated during
+            the detection process.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -557,7 +666,6 @@ class AnomalyDetector:
     def detect_zscore_anomalies(
         self, df: pd.DataFrame, dataset_name: str
     ) -> pd.DataFrame:
-        """Détecte les anomalies par Z-score"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         anomalies_df = pd.DataFrame()
 
@@ -585,7 +693,6 @@ class AnomalyDetector:
         return anomalies_df
 
     def detect_iqr_anomalies(self, df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
-        """Détecte les anomalies par IQR"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         anomalies_list = []
 
@@ -635,10 +742,8 @@ class AnomalyDetector:
     def detect_inconsistencies(
         self, df: pd.DataFrame, dataset_name: str
     ) -> List[Dict[str, Any]]:
-        """Détecte les incohérences"""
         inconsistencies = []
 
-        # Vérification des valeurs négatives inappropriées
         for col in df.select_dtypes(include=[np.number]).columns:
             if any(
                 keyword in col.lower()
@@ -656,7 +761,6 @@ class AnomalyDetector:
                         }
                     )
 
-        # Vérification des années invalides
         for col in df.columns:
             if "year" in col.lower() or "année" in col.lower():
                 invalid_years = df[(df[col] < 1900) | (df[col] > 2025)]
@@ -674,7 +778,6 @@ class AnomalyDetector:
         return inconsistencies
 
     def generate_anomaly_report(self) -> pd.DataFrame:
-        """Génère le rapport d'anomalies"""
         if not self.anomaly_reports:
             return pd.DataFrame()
 
@@ -683,17 +786,27 @@ class AnomalyDetector:
 
 # %%
 class IndicatorBuilder:
-    """Constructeur d'indicateurs dérivés"""
+    """
+    This class is responsible for constructing various socio-economic statistical indicators.
 
+    The IndicatorBuilder class provides methods to generate demographic, economic, education,
+    and composite indicators from a provided dataset. These indicators can be further used
+    for statistical analysis, regional development monitoring, or economic assessments. The
+    class allows customization through configuration settings.
+
+    Attributes:
+        config (AnalysisConfig): Configuration object for the builder, including settings
+            like base year for GDP calculations.
+        logger (Logger): Logger instance for capturing events during the indicator-building
+            process.
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def build_demographic_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Construit les indicateurs démographiques"""
         result = df.copy()
 
-        # Taux de croissance de la population
         if "population" in df.columns or "total_population" in df.columns:
             pop_col = "population" if "population" in df.columns else "total_population"
 
@@ -702,19 +815,16 @@ class IndicatorBuilder:
                 result = result.sort_values(time_col)
                 result["population_growth_rate"] = result[pop_col].pct_change() * 100
 
-        # Ratio de population jeune
         if "population_0_14" in df.columns and "total_population" in df.columns:
             result["youth_population_ratio"] = (
                 result["population_0_14"] / result["total_population"]
             ) * 100
 
-        # Ratio de population âgée
         if "population_65_plus" in df.columns and "total_population" in df.columns:
             result["elderly_population_ratio"] = (
                 result["population_65_plus"] / result["total_population"]
             ) * 100
 
-        # Densité de population (si superficie disponible)
         if all(col in df.columns for col in ["total_population", "surface_area_km2"]):
             result["population_density"] = (
                 result["total_population"] / result["surface_area_km2"]
@@ -724,21 +834,17 @@ class IndicatorBuilder:
         return result
 
     def build_economic_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Construit les indicateurs économiques"""
         result = df.copy()
 
-        # PIB par habitant
         if all(col in df.columns for col in ["gdp", "total_population"]):
             result["gdp_per_capita"] = result["gdp"] / result["total_population"]
 
-        # Taux de croissance du PIB
         if "gdp" in df.columns:
             if "year" in df.columns or "année" in df.columns:
                 time_col = "year" if "year" in df.columns else "année"
                 result = result.sort_values(time_col)
                 result["gdp_growth_rate"] = result["gdp"].pct_change() * 100
 
-        # Indice de PIB (base 100)
         if "gdp" in df.columns and "year" in df.columns:
             base_year = self.config.GDP_BASE_YEAR
             base_gdp = (
@@ -752,10 +858,8 @@ class IndicatorBuilder:
         return result
 
     def build_education_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Construit les indicateurs d'éducation"""
         result = df.copy()
 
-        # Taux de scolarisation net
         if all(
             col in df.columns for col in ["enrolled_students", "school_age_population"]
         ):
@@ -763,7 +867,6 @@ class IndicatorBuilder:
                 result["enrolled_students"] / result["school_age_population"]
             ) * 100
 
-        # Ratio élèves-enseignants
         if all(col in df.columns for col in ["total_students", "total_teachers"]):
             result["student_teacher_ratio"] = (
                 result["total_students"] / result["total_teachers"]
@@ -779,7 +882,6 @@ class IndicatorBuilder:
         weights: Optional[List[float]] = None,
         index_name: str = "composite_index",
     ) -> pd.DataFrame:
-        """Construit un indice composite"""
         result = df.copy()
 
         available_indicators = [ind for ind in indicators if ind in df.columns]
@@ -788,24 +890,20 @@ class IndicatorBuilder:
             self.logger.warning(f"⚠️ Aucun indicateur disponible pour {index_name}")
             return result
 
-        # Normalisation des indicateurs (min-max)
         scaler = StandardScaler()
         normalized_data = scaler.fit_transform(df[available_indicators].fillna(0))
         normalized_df = pd.DataFrame(
             normalized_data, columns=available_indicators, index=df.index
         )
 
-        # Application des poids
         if weights is None:
             weights = [1 / len(available_indicators)] * len(available_indicators)
 
-        # Calcul de l'indice composite
         result[index_name] = sum(
             normalized_df[ind] * weight
             for ind, weight in zip(available_indicators, weights)
         )
 
-        # Normalisation finale (0-100)
         result[index_name] = (
             (result[index_name] - result[index_name].min())
             / (result[index_name].max() - result[index_name].min())
@@ -815,10 +913,8 @@ class IndicatorBuilder:
         return result
 
     def build_regional_development_index(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Construit un indice de développement régional"""
         indicators = []
 
-        # Sélection automatique des indicateurs disponibles
         if "gdp_per_capita" in df.columns:
             indicators.append("gdp_per_capita")
         if "net_enrollment_rate" in df.columns:
@@ -839,8 +935,21 @@ class IndicatorBuilder:
 
 # %%
 class AggregationEngine:
-    """Moteur d'agrégation temporelle et spatiale"""
+    """
+    Facilitates various types of data aggregation, including temporal, spatial, normalization
+    by population, and multi-level aggregation.
 
+    The class provides methods to manipulate, aggregate, and normalize data in structured
+    tabular formats, such as those handled by pandas DataFrames. Aggregation can be performed
+    based on specific time, spatial, or hierarchical grouping levels, with support for custom
+    aggregation functions. Additionally, normalization of values by population is available
+    to standardize metrics for better interpretability across datasets.
+
+    Attributes:
+        config: Optional AnalysisConfig instance to configure the behavior of the engine.
+        logger: Logging instance used for debugging and information purposes.
+
+    """
     def __init__(self, config: Optional[AnalysisConfig] = None):
         self.config = config or AnalysisConfig()
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -884,7 +993,6 @@ class AggregationEngine:
         value_cols: List[str],
         agg_functions: Optional[Dict[str, str]] = None,
     ) -> pd.DataFrame:
-        """Agrégation spatiale"""
         if agg_functions is None:
             agg_functions = {col: "sum" for col in value_cols}
 
@@ -909,7 +1017,6 @@ class AggregationEngine:
         value_cols: List[str],
         population_col: str = "total_population",
     ) -> pd.DataFrame:
-        """Normalise les valeurs par habitant"""
         result = df.copy()
 
         if population_col not in df.columns:
@@ -927,7 +1034,6 @@ class AggregationEngine:
     def multi_level_aggregation(
         self, df: pd.DataFrame, group_cols: List[str], value_cols: List[str]
     ) -> Dict[str, pd.DataFrame]:
-        """Agrégation multi-niveaux"""
         aggregations = {}
 
         for i in range(1, len(group_cols) + 1):
@@ -951,8 +1057,17 @@ class AggregationEngine:
 
 # %%
 class VisualizationEngine:
-    """Moteur de visualisation"""
+    """
+    Handles the visualization of various datasets and trends.
 
+    This class provides methods to create and save visualizations for temporal trends, correlation matrices,
+    and spatial distributions. The class is designed to facilitate exploratory data analysis and better
+    understanding of data patterns. It takes care of rendering plots and saving them to a specified output
+    directory.
+
+    Attributes:
+        output_dir (Path): Directory where the plots will be saved.
+    """
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -960,7 +1075,6 @@ class VisualizationEngine:
     def plot_temporal_trends(
         self, trends: Dict[str, pd.DataFrame], time_col: str, save: bool = True
     ) -> None:
-        """Visualise les tendances temporelles"""
         n_plots = len(trends)
         if n_plots == 0:
             return
@@ -1005,7 +1119,6 @@ class VisualizationEngine:
     def plot_correlation_heatmap(
         self, corr_matrix: pd.DataFrame, save: bool = True
     ) -> None:
-        """Visualise la matrice de corrélation"""
         if corr_matrix.empty:
             return
 
@@ -1044,7 +1157,6 @@ class VisualizationEngine:
         value_col: str = "mean",
         save: bool = True,
     ) -> None:
-        """Visualise la distribution spatiale"""
         if spatial_stats.empty:
             return
 
@@ -1079,8 +1191,33 @@ class VisualizationEngine:
 
 # %%
 class ExplorationOrchestrator:
-    """Orchestrateur de l'exploration et analyse"""
+    """
+    Handles orchestration of various data analysis phases including descriptive analysis,
+    trend analysis, spatial analysis, correlation analysis, and anomaly detection.
 
+    This class is responsible for coordinating the execution and management of different
+    analysis modules. It provides functionalities to analyze datasets in stages,
+    producing reports, visualizations, and other results as outputs for each phase. It
+    integrates functionalities such as data loading, managing file directories, and
+    logging progress during analysis.
+
+    Attributes:
+        config (Optional[AnalysisConfig]): Configuration settings for the analysis.
+        base_dir (Optional[Path]): Base directory for organization of analysis files and outputs.
+        logger: Logger instance for tracking execution details.
+        dir_manager: Manages directory structure for analysis input and output files.
+        directories: Dictionary containing paths to different directories for input, output, etc.
+        loader: Loader module for importing datasets.
+        descriptive_analyzer: Module for conducting descriptive statistics analysis.
+        trend_analyzer: Module for analyzing temporal trends in data.
+        spatial_analyzer: Module for analyzing spatial patterns in data.
+        correlation_analyzer: Module for detecting correlations and generating correlation matrices.
+        anomaly_detector: Module for identifying anomalies and inconsistencies within datasets.
+        indicator_builder: Module for building custom indicators or metrics.
+        aggregation_engine: Module for aggregating results and data.
+        viz_engine: Visualization engine for generating plots and visual insights.
+        results: Stores output of executed analysis stages.
+    """
     def __init__(
         self, config: Optional[AnalysisConfig] = None, base_dir: Optional[Path] = None
     ):
@@ -1107,7 +1244,6 @@ class ExplorationOrchestrator:
     def run_descriptive_analysis(
         self, datasets: Dict[str, pd.DataFrame]
     ) -> Dict[str, Any]:
-        """Phase 1: Analyse descriptive"""
         self.logger.info("📊 PHASE 1: ANALYSE DESCRIPTIVE")
         print("\n" + "=" * 80)
         print("📊 PHASE 1: ANALYSE DESCRIPTIVE")
@@ -1120,12 +1256,10 @@ class ExplorationOrchestrator:
             analysis = self.descriptive_analyzer.analyze_dataset(df, name)
             analyses[name] = analysis
 
-            # Sauvegarde des statistiques
             if "column_statistics" in analysis:
                 stats_path = self.directories["analysis"] / f"{name}_column_stats.csv"
                 analysis["column_statistics"].to_csv(stats_path, index=False)
 
-        # Rapport de synthèse
         summary_report = self.descriptive_analyzer.generate_summary_report(analyses)
         summary_path = self.directories["analysis"] / "descriptive_summary.csv"
         summary_report.to_csv(summary_path, index=False)
@@ -1137,7 +1271,6 @@ class ExplorationOrchestrator:
         return analyses
 
     def run_trend_analysis(self, datasets: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
-        """Phase 2: Analyse des tendances"""
         self.logger.info("📈 PHASE 2: ANALYSE DES TENDANCES TEMPORELLES")
         print("\n" + "=" * 80)
         print("📈 PHASE 2: ANALYSE DES TENDANCES TEMPORELLES")
@@ -1163,7 +1296,6 @@ class ExplorationOrchestrator:
                 if trends:
                     all_trends[name] = trends
 
-                    # Sauvegarde
                     for var, trend_df in trends.items():
                         trend_path = (
                             self.directories["analysis"] / f"{name}_{var}_trend.csv"
@@ -1179,7 +1311,6 @@ class ExplorationOrchestrator:
         return all_trends
 
     def run_spatial_analysis(self, datasets: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
-        """Phase 3: Analyse spatiale"""
         self.logger.info("🗺️ PHASE 3: ANALYSE DES DYNAMIQUES SPATIALES")
         print("\n" + "=" * 80)
         print("🗺️ PHASE 3: ANALYSE DES DYNAMIQUES SPATIALES")
@@ -1205,7 +1336,6 @@ class ExplorationOrchestrator:
                 if not spatial_dist.empty:
                     spatial_results[name] = spatial_dist
 
-                    # Sauvegarde
                     spatial_path = (
                         self.directories["analysis"] / f"{name}_spatial_analysis.csv"
                     )
@@ -1222,7 +1352,6 @@ class ExplorationOrchestrator:
     def run_correlation_analysis(
         self, datasets: Dict[str, pd.DataFrame]
     ) -> Dict[str, Any]:
-        """Phase 4: Analyse des corrélations"""
         self.logger.info("🔗 PHASE 4: ANALYSE DES CORRÉLATIONS")
         print("\n" + "=" * 80)
         print("🔗 PHASE 4: ANALYSE DES CORRÉLATIONS")
@@ -1241,7 +1370,6 @@ class ExplorationOrchestrator:
                     ),
                 }
 
-                # Sauvegarde
                 corr_path = self.directories["analysis"] / f"{name}_correlations.csv"
                 corr_matrix.to_csv(corr_path)
 
@@ -1253,7 +1381,6 @@ class ExplorationOrchestrator:
                         strong_corr_path, index=False
                     )
 
-                # Visualisation
                 self.viz_engine.plot_correlation_heatmap(corr_matrix)
 
         print(f"\n✅ Analyse des corrélations terminée")
@@ -1264,7 +1391,6 @@ class ExplorationOrchestrator:
     def run_anomaly_detection(
         self, datasets: Dict[str, pd.DataFrame]
     ) -> Dict[str, Any]:
-        """Phase 5: Détection des anomalies"""
         self.logger.info("🔍 PHASE 5: DÉTECTION DES ANOMALIES")
         print("\n" + "=" * 80)
         print("🔍 PHASE 5: DÉTECTION DES ANOMALIES")
@@ -1274,13 +1400,10 @@ class ExplorationOrchestrator:
         all_inconsistencies = []
 
         for name, df in datasets.items():
-            # Détection Z-score
             self.anomaly_detector.detect_zscore_anomalies(df, name)
 
-            # Détection IQR
             iqr_anomalies = self.anomaly_detector.detect_iqr_anomalies(df, name)
 
-            # Détection d'incohérences
             inconsistencies = self.anomaly_detector.detect_inconsistencies(df, name)
 
             if not iqr_anomalies.empty:
@@ -1289,7 +1412,6 @@ class ExplorationOrchestrator:
             if inconsistencies:
                 all_inconsistencies.extend(inconsistencies)
 
-        # Rapport global
         anomaly_report = self.anomaly_detector.generate_anomaly_report()
         if not anomaly_report.empty:
             anomaly_path = self.directories["anomalies"] / "anomaly_report.csv"
@@ -1297,7 +1419,6 @@ class ExplorationOrchestrator:
             print(f"\n📄 Rapport d'anomalies: {anomaly_path.name}")
             print(f"   Total anomalies détectées: {len(anomaly_report)}")
 
-        # Rapport d'incohérences
         if all_inconsistencies:
             incon_df = pd.DataFrame(all_inconsistencies)
             incon_path = self.directories["anomalies"] / "inconsistencies_report.csv"
@@ -1316,7 +1437,6 @@ class ExplorationOrchestrator:
     def run_indicator_creation(
         self, datasets: Dict[str, pd.DataFrame]
     ) -> Dict[str, pd.DataFrame]:
-        """Phase 6: Création d'indicateurs"""
         self.logger.info("🔧 PHASE 6: CRÉATION D'INDICATEURS DÉRIVÉS")
         print("\n" + "=" * 80)
         print("🔧 PHASE 6: CRÉATION D'INDICATEURS DÉRIVÉS")
@@ -1327,25 +1447,19 @@ class ExplorationOrchestrator:
         for name, df in datasets.items():
             enriched = df.copy()
 
-            # Indicateurs démographiques
             enriched = self.indicator_builder.build_demographic_indicators(enriched)
 
-            # Indicateurs économiques
             enriched = self.indicator_builder.build_economic_indicators(enriched)
 
-            # Indicateurs d'éducation
             enriched = self.indicator_builder.build_education_indicators(enriched)
 
-            # Indice de développement régional
             enriched = self.indicator_builder.build_regional_development_index(enriched)
 
-            # Comptage des nouvelles colonnes
             new_cols = set(enriched.columns) - set(df.columns)
 
             if new_cols:
                 enriched_datasets[name] = enriched
 
-                # Sauvegarde
                 enriched_path = self.directories["enriched"] / f"{name}_enriched.csv"
                 enriched.to_csv(enriched_path, index=False)
 
@@ -1359,7 +1473,6 @@ class ExplorationOrchestrator:
         return enriched_datasets
 
     def run_aggregations(self, datasets: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
-        """Phase 7: Agrégations"""
         self.logger.info("📊 PHASE 7: AGRÉGATIONS TEMPORELLES ET SPATIALES")
         print("\n" + "=" * 80)
         print("📊 PHASE 7: AGRÉGATIONS TEMPORELLES ET SPATIALES")
@@ -1370,7 +1483,6 @@ class ExplorationOrchestrator:
         for name, df in datasets.items():
             dataset_aggs = {}
 
-            # Agrégation temporelle
             temporal_vars = self.descriptive_analyzer.identify_temporal_variables(df)
             if temporal_vars:
                 time_col = temporal_vars[0]
@@ -1388,7 +1500,6 @@ class ExplorationOrchestrator:
                         )
                         temp_agg.to_csv(temp_path, index=False)
 
-            # Agrégation spatiale
             spatial_vars = self.descriptive_analyzer.identify_spatial_variables(df)
             if spatial_vars:
                 spatial_col = spatial_vars[0]
@@ -1406,7 +1517,6 @@ class ExplorationOrchestrator:
                         )
                         spatial_agg.to_csv(spatial_path, index=False)
 
-            # Normalisation par population
             if "total_population" in df.columns or "population" in df.columns:
                 pop_col = (
                     "total_population"
@@ -1441,12 +1551,10 @@ class ExplorationOrchestrator:
         return aggregations
 
     def generate_methodology_document(self) -> pd.DataFrame:
-        """Génère la documentation méthodologique"""
         self.logger.info("📝 Génération de la documentation méthodologique")
 
         methodology = []
 
-        # Anomalies
         anomaly_report = self.anomaly_detector.generate_anomaly_report()
         if not anomaly_report.empty:
             for _, row in anomaly_report.iterrows():
@@ -1461,7 +1569,6 @@ class ExplorationOrchestrator:
                     }
                 )
 
-        # Indicateurs créés
         methodology.append(
             {
                 "category": "Indicateur",
@@ -1495,7 +1602,6 @@ class ExplorationOrchestrator:
             }
         )
 
-        # Agrégations
         methodology.append(
             {
                 "category": "Agrégation",
@@ -1520,7 +1626,6 @@ class ExplorationOrchestrator:
 
         methodology_df = pd.DataFrame(methodology)
 
-        # Sauvegarde
         method_path = self.directories["analysis"] / "methodology_documentation.csv"
         methodology_df.to_csv(method_path, index=False)
 
@@ -1529,12 +1634,10 @@ class ExplorationOrchestrator:
         return methodology_df
 
     def run_complete_analysis(self) -> Dict[str, Any]:
-        """Exécute le pipeline complet d'analyse"""
         print("\n" + "=" * 80)
         print("🚀 DÉMARRAGE PIPELINE ANALYSE COMPLÈTE - TÂCHE 2")
         print("=" * 80)
 
-        # Chargement des données
         datasets = self.loader.load_all_datasets()
 
         if not datasets:
@@ -1543,33 +1646,24 @@ class ExplorationOrchestrator:
             )
             return {}
 
-        # Phase 1: Analyse descriptive
         descriptive_results = self.run_descriptive_analysis(datasets)
 
-        # Phase 2: Tendances temporelles
         trend_results = self.run_trend_analysis(datasets)
 
-        # Phase 3: Dynamiques spatiales
         spatial_results = self.run_spatial_analysis(datasets)
 
-        # Phase 4: Corrélations
         correlation_results = self.run_correlation_analysis(datasets)
 
-        # Phase 5: Anomalies
         anomaly_results = self.run_anomaly_detection(datasets)
 
-        # Phase 6: Indicateurs dérivés
         enriched_datasets = self.run_indicator_creation(datasets)
 
-        # Phase 7: Agrégations
         aggregation_results = self.run_aggregations(
             enriched_datasets if enriched_datasets else datasets
         )
 
-        # Documentation méthodologique
         methodology_doc = self.generate_methodology_document()
 
-        # Rapport final
         print("\n" + "=" * 80)
         print("✅ PIPELINE TERMINÉ AVEC SUCCÈS")
         print("=" * 80)
@@ -1605,20 +1699,22 @@ class ExplorationOrchestrator:
 
 # %%
 def main():
-    """Point d'entrée principal"""
+    """
+    Main function to set up the environment, initialize the orchestrator, and execute
+    a complete analysis.
 
-    # Configuration de l'environnement
+    Return:
+        The results of the complete analysis.
+
+    """
     setup_analysis_environment(log_dir=Path("logs_task_2"))
 
-    # Création de l'orchestrateur
     orchestrator = ExplorationOrchestrator()
 
-    # Exécution du pipeline complet
     results = orchestrator.run_complete_analysis()
 
     return results
 
 
 # %%
-if __name__ == "__main__":
-    results = main()
+_ = main()

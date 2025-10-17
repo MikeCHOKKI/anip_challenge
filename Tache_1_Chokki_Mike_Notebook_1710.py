@@ -20,9 +20,48 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
 #%%
 @dataclass
 class GlobalConfig:
+    """
+    Represents the global configuration for a data collection, processing, and API interactions system.
+
+    This class defines several constants and configurations necessary for interacting with various APIs,
+    structuring directories, and specifying default indicators for data extraction. It is useful for maintaining
+    a unified and centralized configuration setup, enabling seamless adjustments and reducing code redundancy.
+
+    Attributes:
+        COUNTRY_CODE (str): The ISO country code.
+        COUNTRY_NAME (str): Full name of the country.
+        START_YEAR (int): Start year for data collection.
+        END_YEAR (int): End year for data collection.
+        WORLD_BANK_API_URL (str): Base URL for the World Bank API.
+        INSTAD_API_URL (str): Base URL for Instad APIs.
+        OVERPASS_API_URL (str): Base URL for Overpass API.
+        FMI_API_URL (str): Base URL for the IMF API.
+        OMS_API_URL (str): Base URL for the WHO API.
+        UNDP_API_URL (str): URL for UNDP indicators data.
+        DEFAULT_PER_PAGE (int): Default number of results per page for API and data requests.
+        REQUEST_TIMEOUT (int): Timeout duration in seconds for API requests.
+        RETRY_COUNT (int): Number of retry attempts for failed API requests.
+        DELAY_BETWEEN_REQUESTS (float): Delay in seconds between consecutive API calls.
+        DIRECTORY_STRUCTURE (Dict[str, str]): Directory structure configuration dict with specified keys like
+            'data', 'raw', 'processed', etc.
+        DEFAULT_WB_INDICATORS (List[str]): Default World Bank economic and population indicators.
+        DEFAULT_IMF_INDICATORS (List[str]): Default IMF economic indicators.
+        DEFAULT_HEALTH_INDICATORS (List[str]): Default WHO health-related indicators.
+        OSM_ADMIN_LEVELS (Dict[str, str]): Administrative levels mapping for OSM data.
+        EXTERNAL_SCRAPING_URLS (Dict[str, str]): URLs for external scraping resources.
+        EXTERNAL_CSV_URLS (List[str]): External CSV file data source URLs.
+
+    Methods:
+        __post_init__(): Validates the initial configuration parameters to ensure consistency and correctness.
+
+    Raises:
+        ValueError: Raised if START_YEAR is greater than END_YEAR, if the years are outside the acceptable range
+            of 1900 to 2100, if RETRY_COUNT is less than 1, or REQUEST_TIMEOUT is less than 1.
+    """
     COUNTRY_CODE: str = "BJ"
     COUNTRY_NAME: str = "Bénin"
     START_YEAR: int = 2015
@@ -118,6 +157,41 @@ class GlobalConfig:
 #%%
 @dataclass
 class CleaningReport:
+    """
+    Represents a report detailing data cleaning and processing performed on a dataset.
+
+    This class is designed to store information about various cleaning operations
+    performed on dataset columns and rows, such as handling nulls, removing duplicates,
+    standardizing columns, converting data types, among others. It provides an organized
+    way to track the source of the dataset, the state of rows before and after cleaning,
+    and other specific actions taken during the cleaning process. Additionally, the class
+    offers a method for converting the cleaning report into a dictionary format.
+
+    Attributes:
+        source (str): The origin or source of the dataset.
+        initial_rows (int): The number of rows in the dataset before cleaning.
+        final_rows (int): The number of rows in the dataset after cleaning.
+        rows_removed (int): Total rows removed during the cleaning process. Defaults to 0.
+        duplicates_removed (int): Total duplicate rows removed. Defaults to 0.
+        nulls_handled (int): Total number of null values handled. Defaults to 0.
+        outliers_removed (int): Total outliers removed from the dataset. Defaults to 0.
+        columns_standardized (List[str]): List of columns that were standardized. Defaults to an empty list.
+        columns_dropped (List[str]): List of columns dropped during cleaning. Defaults to an empty list.
+        data_types_converted (Dict[str, str]): Dictionary of columns whose data types were converted,
+            mapping column names to their new data types. Defaults to an empty dictionary.
+        issues_detected (List[str]): List of issues or problems detected during cleaning. Defaults to an empty list.
+        cleaning_timestamp (datetime): The timestamp when cleaning was conducted. Defaults to the current time.
+
+    Methods:
+        to_dict:
+            Converts the cleaning report into a dictionary representation for easier
+            usage in logging, reporting, or further data analysis.
+
+            Returns:
+                Dict[str, Any]: A dictionary containing key information of the cleaning
+                report, including derived metrics like removal percentage and counts
+                of operations performed.
+    """
     source: str
     initial_rows: int
     final_rows: int
@@ -154,6 +228,35 @@ class CleaningReport:
 #%%
 @dataclass
 class PerformanceMetrics:
+    """
+    Encapsulates performance metrics for tracking the execution of an operation.
+
+    This class provides attributes to measure and record the performance of an operation, such
+    as start and end times, duration, the number of items processed, and whether the operation
+    succeeded or failed. It includes utility methods for finalizing and converting recorded
+    metrics into a dictionary for further use or reporting.
+
+    Attributes:
+        operation_name (str): The name of the operation being tracked.
+        start_time (datetime): The starting time of the operation.
+        end_time (Optional[datetime]): The ending time of the operation. Defaults to None.
+        duration_seconds (float): The total duration of the operation in seconds. Defaults
+            to 0.0.
+        items_processed (int): The number of items processed during the operation. Defaults to 0.
+        success (bool): Indicates whether the operation was successful. Defaults to True.
+        error_message (Optional[str]): An optional message describing any error that occurred
+            during the operation. Defaults to None.
+        metadata (Dict[str, Any]): Additional information related to the operation, stored
+            as key-value pairs. Defaults to an empty dictionary.
+
+    Methods:
+        finalize(items: int = 0, success: bool = True, error: Optional[str] = None): Finalizes
+            the metrics by recording the end time, calculating the duration, and updating the
+            number of items, success flag, and error message.
+        to_dict() -> Dict[str, Any]: Converts the metrics to a dictionary format for reporting
+            or storage purposes.
+        __str__() -> str: Returns a string representation of the metrics for easy readability.
+    """
     operation_name: str
     start_time: datetime
     end_time: Optional[datetime] = None
@@ -204,11 +307,46 @@ class PerformanceMetrics:
         return f"{status} {self.operation_name} | Durée: {duration_str}"
 #%%
 def is_script() -> bool:
+    """
+    Determines if the current executing script is being run as a standalone script.
+
+    This function checks if the module `__main__` (the entry point of the program) has
+    an attribute `__file__`, which indicates whether it is executed as a script or an
+    interactive session. This can be useful to distinguish between these two modes of
+    execution in Python.
+
+    Returns:
+        bool: True if the script is being executed as a standalone script, False otherwise.
+    """
     return hasattr(sys.modules["__main__"], "__file__")
 #%%
 def setup_environment(
         log_dir: Optional[Path] = None, log_level: int = logging.INFO
 ) -> None:
+    """
+    Sets up the environment by configuring logging, warnings, pandas options, and visualization settings.
+
+    This function handles the following:
+    - Configures the logging system to output messages to the console and optionally to a file.
+    - Suppresses deprecated, user, and future warnings.
+    - Adjusts pandas settings for data display, including maximum rows, column limits, and formatting.
+    - Customizes Seaborn and Matplotlib aesthetics for visualizations.
+
+    It is useful for initializing a consistent environment for data analysis or application workflows.
+
+    Parameters:
+    log_dir: Optional[Path]
+        Path to the directory where log files should be stored. If not provided, logging to
+        a file is disabled.
+    log_level: int
+        The logging level used to filter messages. Defaults to logging.INFO.
+
+    Returns:
+    None
+
+    Raises:
+    None
+    """
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -254,6 +392,23 @@ def setup_environment(
     sns.set_palette("Set2")
 #%%
 class DirectoryManager:
+    """
+    Manages directories and provides utility methods for structure initialization
+    and path retrieval.
+
+    The DirectoryManager class is designed to handle the creation and management
+    of directory structures. It enables initializing a directory structure based
+    on a given configuration, retrieving paths for specific directories, and listing
+    all managed directories. This is particularly useful in applications that require
+    consistency in directory organization.
+
+    Attributes:
+        base_dir (Path): The base directory where the structure will be created.
+            Defaults to the current script's directory or the current working
+            directory if not specified.
+        custom_structure (Optional[Dict[str, str]]): An optional custom directory
+            structure defined as a mapping of directory names to relative paths.
+    """
     def __init__(
             self,
             base_dir: Optional[Path] = None,
@@ -289,6 +444,28 @@ class DirectoryManager:
         return self._directories.copy()
 #%%
 class AbstractCollector(ABC):
+    """
+    Abstract base class for data collection and saving operations.
+
+    This class provides a general framework for collecting data from various sources
+    and saving it in different formats. It includes methods to validate URLs,
+    handle HTTP requests with retries, and save data using multiple formats. The
+    class is designed to be extended by specific data collector implementations.
+
+    Attributes:
+        config (GlobalConfig): Configuration for the collector, including retry
+            counts, timeouts, and delays between requests.
+        logger (logging.Logger): Logger instance for recording events and errors.
+
+    Methods:
+        collect_data:
+            Abstract method that must be implemented by subclasses. Used to perform
+            the data collection task.
+
+        save_data:
+            Saves a DataFrame in a specified format to the provided file path.
+
+    """
     def __init__(self, config: GlobalConfig):
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -411,6 +588,31 @@ class AbstractCollector(ABC):
             return False, None
 #%%
 class PerformanceTracker:
+    """
+    Tracks and summarizes performance metrics for various operations.
+
+    This class is designed to collect and manage performance metrics, which
+    can be used to analyze the efficiency and effectiveness of various operations.
+    It provides functionalities to add new metrics, summarize them, and print
+    a consolidated report. Useful for logging and debugging purposes in scenarios
+    where monitoring performance is critical.
+
+    Attributes:
+        metrics: List of performance metrics collected, holding objects of type
+            PerformanceMetrics.
+        logger: Logger instance specifically for the class, used to log internal
+            events and debug information.
+
+    Methods:
+        add_metric(metric: PerformanceMetrics):
+            Adds a new performance metric to the tracker.
+
+        get_summary() -> Dict[str, Any]:
+            Returns a summary of collected performance data.
+
+        print_summary():
+            Prints the summarized performance data in a formatted view.
+    """
     def __init__(self):
         self.metrics: List[PerformanceMetrics] = []
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -450,6 +652,32 @@ def timer(
         log_result: bool = True,
         track_metrics: bool = True,
 ):
+    """
+    Decorator to measure and log the execution time of a function.
+
+    This decorator allows you to track the performance of a function by measuring its
+    execution time and, optionally, logging the result and tracking performance metrics.
+    It uses the PerformanceMetrics helper to record the operation name, duration, success
+    status, and any error that occurred.
+
+    Parameters:
+    operation_name: Optional[str]
+        The name of the operation to be tracked. If not provided, the module and function
+        name of the decorated function will be used.
+    log_result: bool
+        Determines whether the result of the execution should be logged. Defaults to True.
+    track_metrics: bool
+        Determines whether the performance metrics should be tracked using a global tracker.
+        Defaults to True.
+
+    Returns:
+    Callable
+        A decorated function that measures and logs its execution time.
+
+    Raises:
+    Exception
+        Propagates any exception raised by the decorated function.
+    """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -496,6 +724,28 @@ def track_progress(
         leave: bool = True,
         **tqdm_kwargs,
 ):
+    """
+    Context manager for tracking progress of iterations using tqdm.
+
+    This context manager wraps an iterable with tqdm to display a progress bar,
+    providing real-time feedback on the progress of iteration steps. The optional
+    parameters allow customization of the progress bar's display.
+
+    Parameters:
+        iterable (Iterable): The iterable whose progress is being tracked.
+        desc (str): Description text displayed on the progress bar. Defaults
+                    to "Processing".
+        total (Optional[int]): The total number of items to iterate over.
+                               If None, the iterable length is used if
+                               available. Defaults to None.
+        unit (str): Unit description for each iteration step. Defaults to "item".
+        leave (bool): Whether to keep the progress bar after completion.
+                      Defaults to True.
+        **tqdm_kwargs: Additional keyword arguments to customize tqdm behavior.
+
+    Yields:
+        tqdm.std.tqdm: A tqdm progress bar object wrapping the given iterable.
+    """
     pbar = tqdm(
         iterable=iterable,
         desc=desc,
@@ -512,6 +762,14 @@ def track_progress(
         pbar.close()
 #%%
 class WorldBankCollector(AbstractCollector):
+    """
+    Handles World Bank data collection.
+
+    This class is responsible for collecting and processing data from the World Bank API.
+    It fetches indicator data for specified countries and years, processes the raw data,
+    and aggregates the results into a structured DataFrame. The class structures its
+    workflow for retry mechanisms, error logging, and performance metrics tracking.
+    """
     @timer(operation_name="WorldBank.fetch_indicator", track_metrics=True)
     def _fetch_indicator_data(
             self,
@@ -577,6 +835,18 @@ class WorldBankCollector(AbstractCollector):
         return result
 #%%
 class WebScrapingCollector(AbstractCollector):
+    """
+    WebScrapingCollector handles the process of scraping tabular data from web pages and consolidating
+    it into a structured format.
+
+    This class is designed to perform web scraping for extracting HTML tables from specific URLs and transform them
+    into a Pandas DataFrame for further processing. It provides functionality to collect data from multiple sources
+    simultaneously and ensures data integrity by cleaning up the tables before they are consolidated into the final
+    output. The scraping tasks are tracked with metrics, and progress is logged effectively.
+
+    Attributes:
+        logger: Logging utility used for tracking the scraping process.
+    """
     @timer(operation_name="WebScraping.scrape_tables", track_metrics=True)
     def _scrape_html_tables(
         self, url: str, source_name: str, max_tables: int = 10
@@ -649,6 +919,20 @@ class WebScrapingCollector(AbstractCollector):
         return result
 #%%
 class GeographicCollector(AbstractCollector):
+    """
+    Collects and processes geographic data using Overpass API.
+
+    This class is responsible for collecting geographic information such as cities
+    and administrative boundaries. It connects to the Overpass API, runs specific
+    queries, processes the responses, and returns the results in a structured
+    format. The primary goal is to gather location-based data relevant to a given
+    region or country for further analysis.
+
+    Methods:
+        collect_data: Initiates the collection process for cities and administrative
+        boundaries and organizes the data into structured outputs.
+
+    """
     @timer(operation_name="Geographic.execute_query", track_metrics=True)
     def _execute_overpass_query(self, query: str, data_type: str) -> pd.DataFrame:
         response, success = self._make_request_with_retry(
@@ -733,6 +1017,19 @@ class GeographicCollector(AbstractCollector):
         return results
 #%%
 class ExternalCollector(AbstractCollector):
+    """
+    Defines the ExternalCollector class, which is responsible for collecting and processing external data
+    sources. This class fetches content from specified URLs, processes it into structured data formats,
+    and normalizes it for downstream analysis. It provides functionality to handle multiple URLs and
+    combines the data into a unified result.
+
+    Attributes:
+        config: Configuration object containing external data source URLs.
+        logger: Logger instance to record activities and errors during data collection.
+
+    Parameters:
+        AbstractCollector: Base class, which ExternalCollector extends functionality from.
+    """
     @timer(operation_name="External.download_file", track_metrics=True)
     def _download_data(self, url: str) -> pd.DataFrame:
         response, success = self._make_request_with_retry(url)
@@ -786,6 +1083,25 @@ class ExternalCollector(AbstractCollector):
         return result
 #%%
 class IMFCollector(AbstractCollector):
+    """
+    Collector class for fetching and processing IMF indicator data.
+
+    This class is responsible for collecting data from the IMF API based on
+    specified indicators, handling API responses and errors, and transforming
+    the data into a pandas DataFrame for further use. It supports retrying
+    failed requests, tracking performance metrics, and logging the progress of
+    the data collection process.
+
+    Methods
+    -------
+    _fetch_indicator_data(indicator: str) -> pd.DataFrame
+        Retrieves a single indicator's data from the IMF API and processes
+        it into a pandas DataFrame.
+
+    collect_data(indicators: Optional[List[str]] = None) -> pd.DataFrame
+        Collects data for multiple indicators from the IMF API and aggregates
+        them into a pandas DataFrame.
+    """
     @timer(operation_name="IMF.fetch_indicator", track_metrics=True)
     def _fetch_indicator_data(self, indicator: str) -> pd.DataFrame:
         url = f"{self.config.FMI_API_URL}/{indicator}"
@@ -841,6 +1157,34 @@ class IMFCollector(AbstractCollector):
         return result
 #%%
 class WHOCollector(AbstractCollector):
+    """
+    Handles the process of collecting data from the WHO's Global Health Observatory (GHO) API.
+
+    Provides functionality to fetch specific health indicator data, parse it into a structured format,
+    and aggregate data for multiple indicators. Ideal for automating the retrieval and handling of WHO's
+    health statistics.
+
+    Attributes
+    ----------
+    config : Config
+        The configuration required to access the WHO API, including URLs, default indicators, and
+        request delay settings.
+    logger : Logger
+        Logger instance for recording the progress and any issues during the collection process.
+
+    Methods
+    -------
+    _parse_who_data(data: Dict, indicator: str) -> List[Dict]
+        Parses raw WHO API response data and extracts relevant fields into a structured format.
+
+    _fetch_indicator_data(indicator: str) -> pd.DataFrame
+        Fetches data for a specific health indicator from the WHO API, returning it as a DataFrame.
+
+    collect_data(indicators: Optional[List[str]] = None) -> pd.DataFrame
+        Collects data for multiple WHO health indicators, aggregates it, and returns the result as
+        a unified DataFrame.
+
+    """
     def _parse_who_data(self, data: Dict, indicator: str) -> List[Dict]:
         records = []
         for item in data.get("value", []):
@@ -898,6 +1242,21 @@ class WHOCollector(AbstractCollector):
         return result
 #%%
 class UNDPCollector(AbstractCollector):
+    """
+    Collects and processes data from the UNDP API.
+
+    This class is responsible for retrieving data from the UNDP's API, filtering
+    it to include only records relevant to the configured country code, and
+    finalizing performance metrics based on the collected data. It is a concrete
+    implementation of the AbstractCollector class.
+
+    Methods:
+        collect_data: Fetches data from the UNDP API, filters data for a specific
+        country based on a configuration, and calculates performance metrics.
+
+    Raises:
+        None
+    """
     @timer(operation_name="UNDP.collect_all", track_metrics=True)
     def collect_data(self) -> pd.DataFrame:
         self.logger.info("🌐 Start UNDP collection")
@@ -926,6 +1285,16 @@ class UNDPCollector(AbstractCollector):
             return pd.DataFrame()
 #%%
 class INSAECollector(AbstractCollector):
+    """
+    Defines the INSAECollector class for collecting and processing data from
+    INSAE (Institut National de la Statistique et de l’Analyse Économique). This
+    class is responsible for downloading and aggregating data from various Excel
+    and CSV files available at specified URLs.
+
+    The class provides methods to scrape and collect data from predefined sources,
+    parse the downloaded file contents, handle various exceptions during file
+    processing, and consolidate the fetched data into a single Pandas DataFrame.
+    """
     @timer(operation_name="INSAE.download_file", track_metrics=True)
     def _download_excel_or_csv(self, url: str) -> pd.DataFrame:
         response, success = self._make_request_with_retry(url)
@@ -1005,6 +1374,30 @@ class INSAECollector(AbstractCollector):
         return result
 #%%
 class DataCleaner:
+    """
+    Provides a framework for cleaning and preprocessing data.
+
+    The class is designed to standardize and clean datasets across various domains.
+    It provides capabilities for removing duplicates, handling null values,
+    standardizing column names, converting data types, removing outliers, and more.
+    It can also perform specific cleaning operations for World Bank data and
+    geographic data. A cleaning summary can be generated to review the results
+    of operations performed.
+
+    Attributes:
+        config: The configuration dictionary for the cleaning process.
+        reports: A dictionary holding the cleaning reports for datasets.
+
+    Methods:
+        clean_dataset(df, source_name):
+            Cleans the provided dataset with various preprocessing operations.
+        clean_world_bank_data(df):
+            Cleans World Bank-specific data with rules specific to such datasets.
+        clean_geographic_data(df):
+            Cleans geographic-specific data, including latitude and longitude validation.
+        generate_cleaning_summary():
+            Generates a summary DataFrame of all cleaning processes performed.
+    """
     def __init__(self, config: Optional[Dict] = None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.config = config or self._default_config()
@@ -1171,6 +1564,16 @@ class DataCleaner:
         return summary_df
 #%%
 class DataCollectorOrchestrator:
+    """
+    Handles the orchestration of data collection, cleaning, and consolidation
+    operations by coordinating with different data collectors and processing tools.
+
+    The class is responsible for initializing, organizing, and managing the workflow
+    pipeline for collecting raw data from various sources, cleaning it using defined
+    cleaning routines, and consolidating final datasets into structured outputs. It
+    supports a configurable and extendable workflow, facilitating data operations
+    such as storage, tracking progress, and logging.
+    """
     def __init__(
         self, config: Optional[GlobalConfig] = None, base_dir: Optional[Path] = None
     ):
@@ -1484,6 +1887,42 @@ class DataCollectorOrchestrator:
 #%%
 @timer(operation_name="Main.execution", track_metrics=True)
 def main():
+    """
+    Executes the main data collection, cleaning, and processing pipeline, and provides
+    summary results and performance metrics.
+
+    This function serves as the main entry point for orchestrating the entire data workflow.
+    It initializes the environment, executes the complete pipeline, logs detailed performance
+    metrics, and displays a summary of the processing results. The function tracks the performance
+    of operations and maintains a record of any remaining quality issues.
+
+    Parameters:
+    operation_name (str): The name of the operation being timed, used for performance tracking.
+    track_metrics (bool): Whether to track and log performance metrics. Defaults to True.
+
+    Returns:
+    dict: A dictionary containing the results of the pipeline execution. Keys include:
+        - 'raw_data': List of collected raw data sources.
+        - 'cleaned_data': List of cleaned data sources.
+        - 'final_datasets': List of finalized datasets.
+        - 'data_dictionary': List of variables documented in the datasets.
+        - 'final_issues': List of sources with unresolved quality issues.
+        - 'performance_metrics': Dictionary with performance metrics, such as total duration,
+          number of successful and failed operations, and items processed.
+
+    Raises:
+    Exception: If an error occurs during any phase of the data workflow.
+
+    Notes:
+    The function logs detailed performance metrics to a CSV file within the designated log
+    directory. The performance data includes operation-specific metrics such as execution
+    time and success rates.
+
+    See Also:
+    DataCollectorOrchestrator: Class responsible for orchestrating data collection and cleaning.
+    setup_environment: Initializes the necessary environment and logging setup.
+    _global_tracker: Tracks operational metrics for performance evaluations.
+    """
     setup_environment(log_dir=Path("logs"))
     orchestrator = DataCollectorOrchestrator()
     results = orchestrator.run_complete_pipeline()
@@ -1510,4 +1949,4 @@ def main():
     print(f"\n💾 Performance metrics: {perf_filepath}")
     return results
 #%%
-main()
+_ = main()
